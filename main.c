@@ -6,17 +6,17 @@
 /*   By: kevso <kevso@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/25 14:50:47 by kevso             #+#    #+#             */
-/*   Updated: 2025/02/25 15:28:01 by kevso            ###   ########.fr       */
+/*   Updated: 2025/04/21 14:37:11 by kevso            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/philo.h"
+#include "philo.h"
 
 int	main(int ac, char **av)
 {
 	if (!parsing(ac, av))
 	{
-		printf("parsing failed\n");
+		printf("Error: parsing error\n");
 		return (1);
 	}
 	printf("parsing successful\n");

@@ -6,11 +6,11 @@
 /*   By: kevso <kevso@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/25 15:26:58 by kevso             #+#    #+#             */
-/*   Updated: 2025/02/25 15:28:19 by kevso            ###   ########.fr       */
+/*   Updated: 2025/04/21 14:37:13 by kevso            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/philo.h"
+#include "philo.h"
 
 /* Checks if all the arguments are digits */
 int	check_full_digits(int ac, char **av)

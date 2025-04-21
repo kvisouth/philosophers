@@ -6,11 +6,11 @@
 /*   By: kevso <kevso@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/25 15:20:33 by kevso             #+#    #+#             */
-/*   Updated: 2025/02/25 15:27:50 by kevso            ###   ########.fr       */
+/*   Updated: 2025/04/21 14:37:12 by kevso            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/philo.h"
+#include "philo.h"
 
 int	ft_atoi(const char *str)
 {

@@ -1,6 +1,6 @@
-SRC		=	src/main.c \
-			src/not_libft.c \
-			src/parsing.c \
+SRC		=	main.c \
+			not_libft.c \
+			parsing.c \
 
 NAME	= philo
 CC		= cc
