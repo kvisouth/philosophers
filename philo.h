@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kevso <kevso@student.42.fr>                +#+  +:+       +#+        */
+/*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/25 14:51:01 by kevso             #+#    #+#             */
-/*   Updated: 2025/02/25 15:27:41 by kevso            ###   ########.fr       */
+/*   Updated: 2025/04/23 15:53:19 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,15 @@
 # include <sys/wait.h>
 # include <pthread.h>
 # include <limits.h>
+
+typedef struct	s_philo
+{
+	int	nb_philos;
+	int	time2die;
+	int	time2eat;
+	int	time2sleep;
+	int	optional;
+}	t_philo;
 
 int	ft_atol(const char *str);
 int	ft_atoi(const char *str);
