@@ -1,6 +1,4 @@
-SRC		=	main.c \
-			not_libft.c \
-			parsing.c \
+SRC		=	$(wildcard *.c)
 
 NAME	= philo
 CC		= cc
