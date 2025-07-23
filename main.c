@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/17 13:06:24 by kevisout          #+#    #+#             */
-/*   Updated: 2025/07/23 21:10:07 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/07/24 00:58:36 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,6 +118,7 @@ void	free_struct(t_struct *st)
 	free(st->philo);
 }
 
+/* Updates the flag that indicates if a philo has died. */
 int	check_death(t_philo *philo, int i)
 {
 	int	flag_value;
@@ -132,23 +133,14 @@ int	check_death(t_philo *philo, int i)
 	return (0);
 }
 
-int	check_death_iter(t_philo *philo)
+int	check_death_flag(t_philo *philo)
 {
-	int	i;
+	int	flag_value;
 
-	i = 0;
-	while (i < philo->sarg->nb_philo)
-	{
-		pthread_mutex_lock(&philo->sarg->mtx_flag);
-		if (philo->sarg->flag != 0)
-		{
-			pthread_mutex_unlock(&philo->sarg->mtx_flag);
-			return (1);
-		}
-		pthread_mutex_unlock(&philo->sarg->mtx_flag);
-		i++;
-	}
-	return (0);
+	pthread_mutex_lock(&philo->sarg->mtx_flag);
+	flag_value = philo->sarg->flag;
+	pthread_mutex_unlock(&philo->sarg->mtx_flag);
+	return (flag_value != 0);
 }
 
 void	print_status(char *str, t_philo *philo)
@@ -164,6 +156,7 @@ void	print_status(char *str, t_philo *philo)
 	}
 }
 
+/* Prints the death and updates the flag to indicate a philo has died */
 void	dying(t_philo *philo)
 {
 	pthread_mutex_unlock(&philo->sarg->mtx_time_eat);
@@ -179,7 +172,7 @@ void	dying(t_philo *philo)
 void	thinking(t_philo *philo)
 {
 	pthread_mutex_lock(&philo->sarg->mtx_print);
-	if (!check_death_iter(philo))
+	if (!check_death_flag(philo))
 		print_status("is thinking\n", philo);
 	pthread_mutex_unlock(&philo->sarg->mtx_print);
 }
@@ -187,49 +180,25 @@ void	thinking(t_philo *philo)
 void	sleeping(t_philo *philo)
 {
 	pthread_mutex_lock(&philo->sarg->mtx_print);
-	if (!check_death_iter(philo))
+	if (!check_death_flag(philo))
 		print_status("is sleeping\n", philo);
 	pthread_mutex_unlock(&philo->sarg->mtx_print);
 	ft_usleep(philo->sarg->time2sleep);
 }
 
-void	eating(t_philo *philo)
+void	handle_single_philo(t_philo *philo)
 {
-	pthread_mutex_t	*first_fork;
-	pthread_mutex_t	*second_fork;
-
-	if (philo->sarg->nb_philo == 1)
-	{
-		pthread_mutex_lock(&philo->left_fork);
-		pthread_mutex_lock(&philo->sarg->mtx_print);
-		print_status("has taken a fork\n", philo);
-		pthread_mutex_unlock(&philo->sarg->mtx_print);
-		ft_usleep(philo->sarg->time2die + 10);
-		pthread_mutex_unlock(&philo->left_fork);
-		return ;
-	}
-	if (&philo->left_fork <= philo->right_fork)
-	{
-		first_fork = &philo->left_fork;
-		second_fork = philo->right_fork;
-	}
-	else
-	{
-		first_fork = philo->right_fork;
-		second_fork = &philo->left_fork;
-	}
-	pthread_mutex_lock(first_fork);
+	pthread_mutex_lock(&philo->left_fork);
 	pthread_mutex_lock(&philo->sarg->mtx_print);
-	if (!check_death_iter(philo))
-		print_status("has taken a fork\n", philo);
+	print_status("has taken a fork\n", philo);
 	pthread_mutex_unlock(&philo->sarg->mtx_print);
-	if (!philo->right_fork)
-	{
-		ft_usleep(philo->sarg->time2die * 2);
-		if (philo->sarg->nb_philo == 1)
-			pthread_mutex_unlock(first_fork);
-		return ;
-	}
+	ft_usleep(philo->sarg->time2die + 10);
+	pthread_mutex_unlock(&philo->left_fork);
+}
+
+void	take_forks_and_eat(t_philo *philo, pthread_mutex_t *first_fork,
+		pthread_mutex_t *second_fork)
+{
 	pthread_mutex_lock(second_fork);
 	pthread_mutex_lock(&philo->sarg->mtx_print);
 	print_status("has taken a fork\n", philo);
@@ -243,6 +212,47 @@ void	eating(t_philo *philo)
 	ft_usleep(philo->sarg->time2eat);
 	pthread_mutex_unlock(second_fork);
 	pthread_mutex_unlock(first_fork);
+}
+
+void	determine_fork_order(t_philo *philo, pthread_mutex_t **first,
+		pthread_mutex_t **second)
+{
+	if (&philo->left_fork <= philo->right_fork)
+	{
+		*first = &philo->left_fork;
+		*second = philo->right_fork;
+	}
+	else
+	{
+		*first = philo->right_fork;
+		*second = &philo->left_fork;
+	}
+}
+
+void	eating(t_philo *philo)
+{
+	pthread_mutex_t	*first_fork;
+	pthread_mutex_t	*second_fork;
+
+	if (philo->sarg->nb_philo == 1)
+	{
+		handle_single_philo(philo);
+		return ;
+	}
+	determine_fork_order(philo, &first_fork, &second_fork);
+	pthread_mutex_lock(first_fork);
+	pthread_mutex_lock(&philo->sarg->mtx_print);
+	if (!check_death_flag(philo))
+		print_status("has taken a fork\n", philo);
+	pthread_mutex_unlock(&philo->sarg->mtx_print);
+	if (!philo->right_fork)
+	{
+		ft_usleep(philo->sarg->time2die * 2);
+		if (philo->sarg->nb_philo == 1)
+			pthread_mutex_unlock(first_fork);
+		return ;
+	}
+	take_forks_and_eat(philo, first_fork, second_fork);
 }
 
 void	routine(t_philo *philo)
@@ -335,7 +345,7 @@ void	*philo_thread(void *data)
 }
 
 /* Create a thread for each philo, where each one of then will run philo_thread
-/* Also create a monitoring thread to check if any philo has died on the run */
+   Also create a monitoring thread to check if any philo has died on the run */
 int	create_threads(t_struct *st)
 {
 	int			i;
