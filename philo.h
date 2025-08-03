@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/25 14:51:01 by kevso             #+#    #+#             */
-/*   Updated: 2025/07/24 20:24:01 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/03 20:19:02 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,9 @@
 # define PHILO_H
 
 # include <stdio.h>
-# include <stdlib.h>
-# include <string.h>
 # include <unistd.h>
+# include <stdlib.h>
 # include <sys/time.h>
-# include <sys/types.h>
-# include <sys/wait.h>
 # include <pthread.h>
 # include <limits.h>
 
@@ -29,16 +26,16 @@ typedef struct s_arg
 	int						time2die;
 	int						time2eat;
 	int						time2sleep;
-	int						meal2eat;
+	int						meals_to_eat;
 	int						satiated_philos;
-	long int				time_start;
 	int						flag;
+	long int				time_start;
 	pthread_mutex_t			mtx_print_status;
 	pthread_mutex_t			mtx_print;
 	pthread_mutex_t			mtx_flag;
 	pthread_mutex_t			mtx_time_eat;
 	pthread_mutex_t			mtx_finish;
-}							t_info;
+}							t_arg;
 
 typedef struct s_philo
 {
@@ -49,17 +46,13 @@ typedef struct s_philo
 	pthread_t				thread_id;
 	pthread_mutex_t			*right_fork;
 	pthread_mutex_t			left_fork;
-	t_info					*info;
+	t_arg					*sarg;
 }							t_philo;
 
 typedef struct s_struct
 {
 	t_philo					*philo;
-	t_info					arg;
+	t_arg					arg;
 }							t_struct;
-
-int	ft_atol(const char *str);
-int	ft_atoi(const char *str);
-int	parsing(int ac, char **av);
 
 #endif

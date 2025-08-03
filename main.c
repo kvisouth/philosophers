@@ -6,13 +6,12 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/17 13:06:24 by kevisout          #+#    #+#             */
-/*   Updated: 2025/07/24 20:24:01 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/03 20:30:25 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-/* Returns the current time in milliseconds since January 1, 1970 00:00 */
 long int	time_now(void)
 {
 	long int			time;
@@ -25,7 +24,6 @@ long int	time_now(void)
 	return (time);
 }
 
-/* A more accurate usleep function (not affected by the system's speed) */
 void	ft_usleep(long int time_in_ms)
 {
 	long int	start_time;
@@ -36,22 +34,131 @@ void	ft_usleep(long int time_in_ms)
 		usleep(time_in_ms / 10);
 }
 
-/* Initializes given arguments into t_struct */
-int	init_infos(int ac, char **av, t_struct *st)
+int	ft_strlen(char *str)
 {
-	st->arg.nb_philo = ft_atoi(av[1]);
-	st->arg.time2die = ft_atoi(av[2]);
-	st->arg.time2eat = ft_atoi(av[3]);
-	st->arg.time2sleep = ft_atoi(av[4]);
-	if (ac == 6)
-		st->arg.meal2eat = ft_atoi(av[5]);
-	st->arg.time_start = time_now();
-	st->arg.flag = 0;
-	st->arg.satiated_philos = 0;
-	return (1);
+	int		i;
+
+	i = 0;
+	while (str[i])
+		i++;
+	return (i);
 }
 
-/* Initializes mutexes used in the program */
+int	ft_isdigit(int c)
+{
+	if (c >= '0' && c <= '9')
+		return (1);
+	else
+		return (0);
+}
+
+int	ft_atoi(const char *str)
+{
+	int	i;
+	int	symb;
+	int	nb;
+
+	nb = 0;
+	symb = 1;
+	i = 0;
+	while ((str[i] == ' ') || (str[i] >= 9 && str[i] <= 13))
+		i++;
+	if (str[i] == '-' || str[i] == '+')
+	{
+		if (str[i] == '-')
+			symb *= -1;
+		i++;
+	}
+	while (str[i] >= '0' && str[i] <= '9')
+	{
+		nb = (nb * 10 + str[i]) - '0';
+		i++;
+	}
+	return (nb * symb);
+}
+
+long	ft_atol(const char *str)
+{
+	int		i;
+	int		sign;
+	long	nb;
+
+	i = 0;
+	sign = 1;
+	nb = 0;
+	while (str[i] == ' ' || (str[i] >= 9 && str[i] <= 13))
+		i++;
+	if (str[i] == '-' || str[i] == '+')
+	{
+		if (str[i] == '-')
+			sign = -1;
+		i++;
+	}
+	while (str[i] >= '0' && str[i] <= '9')
+	{
+		nb = nb * 10 + str[i] - '0';
+		i++;
+	}
+	return (nb * sign);
+}
+
+void	init_arg(int argc, char **argv, t_struct *st)
+{
+	st->arg.nb_philo = ft_atoi(argv[1]);
+	st->arg.time2die = ft_atoi(argv[2]);
+	st->arg.time2eat = ft_atoi(argv[3]);
+	st->arg.time2sleep = ft_atoi(argv[4]);
+	st->arg.meals_to_eat = -1;
+	if (argc == 6)
+		st->arg.meals_to_eat = ft_atoi(argv[5]);
+}
+
+int	check_death(t_philo *philo, int i)
+{
+	int	flag_value;
+
+	pthread_mutex_lock(&philo->sarg->mtx_flag);
+	if (i != 0)
+		philo->sarg->flag = i;
+	flag_value = philo->sarg->flag;
+	pthread_mutex_unlock(&philo->sarg->mtx_flag);
+	if (flag_value != 0)
+		return (1);
+	return (0);
+}
+
+int	check_death_iter(t_philo *philo)
+{
+	int	i;
+
+	i = 0;
+	while (i < philo->sarg->nb_philo)
+	{
+		pthread_mutex_lock(&philo->sarg->mtx_flag);
+		if (philo->sarg->flag != 0)
+		{
+			pthread_mutex_unlock(&philo->sarg->mtx_flag);
+			return (1);
+		}
+		pthread_mutex_unlock(&philo->sarg->mtx_flag);
+		i++;
+	}
+	return (0);
+}
+
+void	print_status(char *str, t_philo *philo)
+{
+	long int		time;
+
+	time = time_now() - philo->sarg->time_start;
+	if (!check_death(philo, 0))
+	{
+		pthread_mutex_lock(&philo->sarg->mtx_print_status);
+		printf("%ld %d %s", time, philo->id, str);
+		pthread_mutex_unlock(&philo->sarg->mtx_print_status);
+	}
+}
+
 void	init_mutex(t_struct *st)
 {
 	pthread_mutex_init(&st->arg.mtx_print_status, NULL);
@@ -61,15 +168,14 @@ void	init_mutex(t_struct *st)
 	pthread_mutex_init(&st->arg.mtx_finish, NULL);
 }
 
-/* Initializes each philosopher needed for the simulation */
 int	init_philo(t_struct *st)
 {
 	int	i;
 
 	i = 0;
-	st->philo = malloc(sizeof(t_philo) * st->arg.nb_philo);
-	if (!st->philo)
-		return (0);
+	st->arg.time_start = time_now();
+	st->arg.flag = 0;
+	st->arg.satiated_philos = 0;
 	init_mutex(st);
 	while (i < st->arg.nb_philo)
 	{
@@ -90,7 +196,7 @@ int	init_philo(t_struct *st)
 	return (1);
 }
 
-void	free_struct(t_struct *st)
+void	free_all(t_struct *st)
 {
 	int	i;
 
@@ -118,141 +224,121 @@ void	free_struct(t_struct *st)
 	free(st->philo);
 }
 
-/* Updates the flag that indicates if a philo has died. */
-int	check_or_set_death_flag(t_philo *philo, int i)
+int	check_numeric(char *av)
 {
-	int	flag_value;
+	int	i;
 
-	pthread_mutex_lock(&philo->info->mtx_flag);
-	if (i != 0)
-		philo->info->flag = i;
-	flag_value = philo->info->flag;
-	pthread_mutex_unlock(&philo->info->mtx_flag);
-	if (flag_value != 0)
-		return (1);
-	return (0);
-}
-
-int	check_death_flag(t_philo *philo)
-{
-	int	flag_value;
-
-	pthread_mutex_lock(&philo->info->mtx_flag);
-	flag_value = philo->info->flag;
-	pthread_mutex_unlock(&philo->info->mtx_flag);
-	return (flag_value != 0);
-}
-
-void	print_status(char *str, t_philo *philo)
-{
-	long int		time;
-
-	time = time_now() - philo->info->time_start;
-	if (!check_or_set_death_flag(philo, 0))
+	i = 0;
+	while (av[i])
 	{
-		pthread_mutex_lock(&philo->info->mtx_print_status);
-		printf("%ld %d %s", time, philo->id, str);
-		pthread_mutex_unlock(&philo->info->mtx_print_status);
+		if (!ft_isdigit(av[i]))
+			return (0);
+		i++;
 	}
+	return (1);
 }
 
-/* Prints the death and updates the flag to indicate a philo has died */
+int	check_positive(char *av)
+{
+	if (ft_atoi(av) <= 0)
+		return (0);
+	return (1);
+}
+
+int	check_ullong(char *av)
+{
+	if (ft_strlen(av) > 10)
+		return (0);
+	return (1);
+}
+
+int	check_int_max(char *av)
+{
+	if (ft_atol(av) > INT_MAX)
+		return (0);
+	return (1);
+}
+
+int	parse_args(int ac, char **av)
+{
+	int	i;
+
+	i = 1;
+	if (ac < 5)
+		return (printf("Error : not enough arguments\n"), 0);
+	if (ac > 6)
+		return (printf("Error : too many arguments\n"), 0);
+	while (i < ac)
+	{
+		if (!check_numeric(av[i]))
+			return (printf("Error : argument %d is not numeric\n", i + 1), 0);
+		if (!check_int_max(av[i]))
+			return (printf("Error : argument %d is too big\n", i + 1), 0);
+		if (!check_ullong(av[i]))
+			return (printf("Error : argument %d is too big\n", i + 1), 0);
+		if (!check_positive(av[i]))
+			return (printf("Error : argument %d is not positive\n", i + 1), 0);
+		i++;
+	}
+	return (1);
+}
+
 void	dying(t_philo *philo)
 {
-	pthread_mutex_unlock(&philo->info->mtx_time_eat);
-	pthread_mutex_unlock(&philo->info->mtx_finish);
-	pthread_mutex_lock(&philo->info->mtx_print);
-	print_status("died\n", philo);
-	pthread_mutex_unlock(&philo->info->mtx_print);
-	check_or_set_death_flag(philo, 1);
-	pthread_mutex_lock(&philo->info->mtx_time_eat);
-	pthread_mutex_lock(&philo->info->mtx_finish);
+	pthread_mutex_unlock(&philo->sarg->mtx_time_eat);
+	pthread_mutex_unlock(&philo->sarg->mtx_finish);
+	pthread_mutex_lock(&philo->sarg->mtx_print);
+	print_status("died 💀💀 👎😹👎 😂🤣\n", philo);
+	pthread_mutex_unlock(&philo->sarg->mtx_print);
+	check_death(philo, 1);
+	pthread_mutex_lock(&philo->sarg->mtx_time_eat);
+	pthread_mutex_lock(&philo->sarg->mtx_finish);
 }
 
 void	thinking(t_philo *philo)
 {
-	pthread_mutex_lock(&philo->info->mtx_print);
-	if (!check_death_flag(philo))
+	pthread_mutex_lock(&philo->sarg->mtx_print);
+	if (!check_death_iter(philo))
 		print_status("is thinking\n", philo);
-	pthread_mutex_unlock(&philo->info->mtx_print);
+	pthread_mutex_unlock(&philo->sarg->mtx_print);
 }
 
 void	sleeping(t_philo *philo)
 {
-	pthread_mutex_lock(&philo->info->mtx_print);
-	if (!check_death_flag(philo))
+	pthread_mutex_lock(&philo->sarg->mtx_print);
+	if (!check_death_iter(philo))
 		print_status("is sleeping\n", philo);
-	pthread_mutex_unlock(&philo->info->mtx_print);
-	ft_usleep(philo->info->time2sleep);
-}
-
-void	handle_single_philo(t_philo *philo)
-{
-	pthread_mutex_lock(&philo->left_fork);
-	pthread_mutex_lock(&philo->info->mtx_print);
-	print_status("has taken a fork\n", philo);
-	pthread_mutex_unlock(&philo->info->mtx_print);
-	ft_usleep(philo->info->time2die + 10);
-	pthread_mutex_unlock(&philo->left_fork);
-}
-
-void	take_forks_and_eat(t_philo *philo, pthread_mutex_t *first_fork,
-		pthread_mutex_t *second_fork)
-{
-	pthread_mutex_lock(second_fork);
-	pthread_mutex_lock(&philo->info->mtx_print);
-	print_status("has taken a fork\n", philo);
-	pthread_mutex_unlock(&philo->info->mtx_print);
-	pthread_mutex_lock(&philo->info->mtx_print);
-	print_status("is eating\n", philo);
-	pthread_mutex_lock(&philo->info->mtx_time_eat);
-	philo->last_eat = time_now();
-	pthread_mutex_unlock(&philo->info->mtx_time_eat);
-	pthread_mutex_unlock(&philo->info->mtx_print);
-	ft_usleep(philo->info->time2eat);
-	pthread_mutex_unlock(second_fork);
-	pthread_mutex_unlock(first_fork);
-}
-
-void	determine_fork_order(t_philo *philo, pthread_mutex_t **first,
-		pthread_mutex_t **second)
-{
-	if (&philo->left_fork <= philo->right_fork)
-	{
-		*first = &philo->left_fork;
-		*second = philo->right_fork;
-	}
-	else
-	{
-		*first = philo->right_fork;
-		*second = &philo->left_fork;
-	}
+	pthread_mutex_unlock(&philo->sarg->mtx_print);
+	ft_usleep(philo->sarg->time2sleep);
 }
 
 void	eating(t_philo *philo)
 {
-	pthread_mutex_t	*first_fork;
-	pthread_mutex_t	*second_fork;
-
-	if (philo->info->nb_philo == 1)
-	{
-		handle_single_philo(philo);
-		return ;
-	}
-	determine_fork_order(philo, &first_fork, &second_fork);
-	pthread_mutex_lock(first_fork);
-	pthread_mutex_lock(&philo->info->mtx_print);
-	if (!check_death_flag(philo))
+	pthread_mutex_lock(&philo->left_fork);
+	pthread_mutex_lock(&philo->sarg->mtx_print);
+	if (!check_death_iter(philo))
 		print_status("has taken a fork\n", philo);
-	pthread_mutex_unlock(&philo->info->mtx_print);
+	pthread_mutex_unlock(&philo->sarg->mtx_print);
 	if (!philo->right_fork)
 	{
-		ft_usleep(philo->info->time2die * 2);
-		if (philo->info->nb_philo == 1)
-			pthread_mutex_unlock(first_fork);
+		ft_usleep(philo->sarg->time2die * 2);
+		if (philo->sarg->nb_philo == 1)
+			pthread_mutex_unlock(&philo->left_fork);
 		return ;
 	}
-	take_forks_and_eat(philo, first_fork, second_fork);
+	pthread_mutex_lock(philo->right_fork);
+	pthread_mutex_lock(&philo->sarg->mtx_print);
+	print_status("has taken a fork\n", philo);
+	pthread_mutex_unlock(&philo->sarg->mtx_print);
+	pthread_mutex_lock(&philo->sarg->mtx_print);
+	print_status("is eating\n", philo);
+	pthread_mutex_lock(&philo->sarg->mtx_time_eat);
+	philo->last_eat = time_now();
+	pthread_mutex_unlock(&philo->sarg->mtx_time_eat);
+	pthread_mutex_unlock(&philo->sarg->mtx_print);
+	ft_usleep(philo->sarg->time2eat);
+	pthread_mutex_unlock(philo->right_fork);
+	pthread_mutex_unlock(&philo->left_fork);
 }
 
 void	routine(t_philo *philo)
@@ -264,21 +350,10 @@ void	routine(t_philo *philo)
 
 void	monitor_flagger(t_struct *st, t_philo *philo)
 {
-	pthread_mutex_unlock(&philo->info->mtx_flag);
-	if (st->arg.nb_philo == 1)
-	{
-		if ((time_now() - philo->last_eat) >= (long)(st->arg.time2die))
-		{
-			pthread_mutex_lock(&st->arg.mtx_print);
-			print_status("died\n", philo);
-			pthread_mutex_unlock(&st->arg.mtx_print);
-			check_or_set_death_flag(philo, 1);
-		}
-		return ;
-	}
+	pthread_mutex_unlock(&philo->sarg->mtx_flag);
 	pthread_mutex_lock(&st->arg.mtx_time_eat);
 	pthread_mutex_lock(&st->arg.mtx_finish);
-	if (!check_or_set_death_flag(philo, 0) && !philo->finish
+	if (!check_death(philo, 0) && !philo->finish
 		&& (time_now() - philo->last_eat)
 		>= (long)(st->arg.time2die))
 	{
@@ -302,12 +377,12 @@ void	*monitoring(void *data)
 		while (1)
 		{
 			ft_usleep(10);
-			pthread_mutex_lock(&philo->info->mtx_flag);
-			if (philo->info->flag == 0)
+			pthread_mutex_lock(&philo->sarg->mtx_flag);
+			if (philo->sarg->flag == 0)
 				monitor_flagger(st, philo);
 			else
 			{
-				pthread_mutex_unlock(&philo->info->mtx_flag);
+				pthread_mutex_unlock(&philo->sarg->mtx_flag);
 				break ;
 			}
 		}
@@ -316,37 +391,35 @@ void	*monitoring(void *data)
 	return (0);
 }
 
-void	*philo_thread(void *data)
+void	*phithread(void *data)
 {
 	t_philo	*philo;
 
 	philo = (t_philo *)data;
 	if (philo->id % 2 == 0)
-		ft_usleep(philo->info->time2eat / 10);
-	while (!check_or_set_death_flag(philo, 0))
+		ft_usleep(philo->sarg->time2eat / 10);
+	while (!check_death(philo, 0))
 	{
 		routine(philo);
-		if (++philo->meals_eaten == philo->info->meal2eat)
+		if (++philo->meals_eaten == philo->sarg->meals_to_eat)
 		{
-			pthread_mutex_lock(&philo->info->mtx_finish);
+			pthread_mutex_lock(&philo->sarg->mtx_finish);
 			philo->finish = 1;
-			philo->info->satiated_philos++;
-			if (philo->info->satiated_philos == philo->info->nb_philo)
+			philo->sarg->satiated_philos++;
+			if (philo->sarg->satiated_philos == philo->sarg->nb_philo)
 			{
-				pthread_mutex_unlock(&philo->info->mtx_finish);
-				check_or_set_death_flag(philo, 2);
-				pthread_mutex_lock(&philo->info->mtx_finish);
+				pthread_mutex_unlock(&philo->sarg->mtx_finish);
+				check_death(philo, 2);
+				pthread_mutex_lock(&philo->sarg->mtx_finish);
 			}
-			pthread_mutex_unlock(&philo->info->mtx_finish);
+			pthread_mutex_unlock(&philo->sarg->mtx_finish);
 			return (0);
 		}
 	}
 	return (0);
 }
 
-/* Create a thread for each philo, where each one of then will run philo_thread
-   Also create a monitoring thread to check if any philo has died on the run */
-int	create_threads(t_struct *st)
+int	threading(t_struct *st)
 {
 	int			i;
 	pthread_t	monithread;
@@ -354,9 +427,9 @@ int	create_threads(t_struct *st)
 	i = 0;
 	while (i < st->arg.nb_philo)
 	{
-		st->philo[i].info = &st->arg;
+		st->philo[i].sarg = &st->arg;
 		if (pthread_create(&st->philo[i].thread_id, NULL,
-				philo_thread, &st->philo[i]) != 0)
+				phithread, &st->philo[i]) != 0)
 			return (0);
 		i++;
 	}
@@ -367,25 +440,16 @@ int	create_threads(t_struct *st)
 
 int	main(int ac, char **av)
 {
-	t_struct	st;
+	t_struct		st;
 
-	if (!parsing(ac, av))
-	{
-		printf("Error: parsing error\n");
-		return (1);
-	}
-	if (!init_infos(ac, av, &st))
+	if (parse_args(ac, av) == 0)
 		return (0);
-	if (!init_philo(&st))
-	{
-		free(st.philo);
+	init_arg(ac, av, &st);
+	st.philo = malloc(sizeof(t_philo) * st.arg.nb_philo);
+	if (!st.philo)
 		return (0);
-	}
-	if (!create_threads(&st))
-	{
-		free(st.philo);
-		return (0);
-	}
-	free_struct(&st);
-	return (0);
+	init_philo(&st);
+	if (!threading(&st))
+		return (free(st.philo), 0);
+	return (free_all(&st), 0);
 }
