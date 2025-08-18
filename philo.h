@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/25 14:51:01 by kevso             #+#    #+#             */
-/*   Updated: 2025/08/03 20:19:02 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/18 14:03:14 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,5 +54,21 @@ typedef struct s_struct
 	t_philo					*philo;
 	t_arg					arg;
 }							t_struct;
+
+/* (not)libft */
+long int	time_now(void);
+void		ft_usleep(long int time_in_ms);
+int			ft_strlen(char *str);
+int			ft_isdigit(int c);
+int			ft_atoi(const char *str);
+long		ft_atol(const char *str);
+
+/* parsing */
+int			parsing(int ac, char **av);
+
+/* init */
+void		init_arg(int argc, char **argv, t_struct *st);
+void		init_mutex(t_struct *st);
+int			init_philo(t_struct *st);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/17 13:06:36 by kevisout          #+#    #+#             */
-/*   Updated: 2025/08/18 13:46:53 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/18 13:47:55 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ int	check_int_max(char *av)
 	return (1);
 }
 
-int	parse_args(int ac, char **av)
+int	parsing(int ac, char **av)
 {
 	int	i;
 

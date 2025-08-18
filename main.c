@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/17 13:06:24 by kevisout          #+#    #+#             */
-/*   Updated: 2025/08/16 22:23:25 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/18 14:03:25 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,17 +22,6 @@ long int	time_now(void)
 		return (0);
 	time = (current_time.tv_sec * 1000) + (current_time.tv_usec / 1000);
 	return (time);
-}
-
-void	init_arg(int argc, char **argv, t_struct *st)
-{
-	st->arg.nb_philo = ft_atoi(argv[1]);
-	st->arg.time2die = ft_atoi(argv[2]);
-	st->arg.time2eat = ft_atoi(argv[3]);
-	st->arg.time2sleep = ft_atoi(argv[4]);
-	st->arg.meals_to_eat = -1;
-	if (argc == 6)
-		st->arg.meals_to_eat = ft_atoi(argv[5]);
 }
 
 int	check_death(t_philo *philo, int i)
@@ -79,43 +68,6 @@ void	print_status(char *str, t_philo *philo)
 		printf("%ld %d %s", time, philo->id, str);
 		pthread_mutex_unlock(&philo->sarg->mtx_print_status);
 	}
-}
-
-void	init_mutex(t_struct *st)
-{
-	pthread_mutex_init(&st->arg.mtx_print_status, NULL);
-	pthread_mutex_init(&st->arg.mtx_print, NULL);
-	pthread_mutex_init(&st->arg.mtx_flag, NULL);
-	pthread_mutex_init(&st->arg.mtx_time_eat, NULL);
-	pthread_mutex_init(&st->arg.mtx_finish, NULL);
-}
-
-int	init_philo(t_struct *st)
-{
-	int	i;
-
-	i = 0;
-	st->arg.time_start = time_now();
-	st->arg.flag = 0;
-	st->arg.satiated_philos = 0;
-	init_mutex(st);
-	while (i < st->arg.nb_philo)
-	{
-		st->philo[i].id = i + 1;
-		st->philo[i].last_eat = st->arg.time_start;
-		st->philo[i].meals_eaten = 0;
-		st->philo[i].finish = 0;
-		st->philo[i].right_fork = NULL;
-		pthread_mutex_init(&st->philo[i].left_fork, NULL);
-		if (st->arg.nb_philo == 1)
-			return (1);
-		if (i == st->arg.nb_philo - 1)
-			st->philo[i].right_fork = &st->philo[0].left_fork;
-		else
-			st->philo[i].right_fork = &st->philo[i + 1].left_fork;
-		i++;
-	}
-	return (1);
 }
 
 void	free_all(t_struct *st)
@@ -305,12 +257,13 @@ int	main(int ac, char **av)
 {
 	t_struct		st;
 
-	if (parse_args(ac, av) == 0)
+	if (!parsing(ac, av))
 		return (0);
 	init_arg(ac, av, &st);
 	st.philo = malloc(sizeof(t_philo) * st.arg.nb_philo);
 	if (!st.philo)
 		return (0);
+	init_mutex(&st);
 	init_philo(&st);
 	if (!threading(&st))
 		return (free(st.philo), 0);
