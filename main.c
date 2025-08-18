@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/17 13:06:24 by kevisout          #+#    #+#             */
-/*   Updated: 2025/08/03 20:58:01 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/16 22:23:25 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,84 +22,6 @@ long int	time_now(void)
 		return (0);
 	time = (current_time.tv_sec * 1000) + (current_time.tv_usec / 1000);
 	return (time);
-}
-
-void	ft_usleep(long int time_in_ms)
-{
-	long int	start_time;
-
-	start_time = 0;
-	start_time = time_now();
-	while ((time_now() - start_time) < time_in_ms)
-		usleep(time_in_ms / 10);
-}
-
-int	ft_strlen(char *str)
-{
-	int		i;
-
-	i = 0;
-	while (str[i])
-		i++;
-	return (i);
-}
-
-int	ft_isdigit(int c)
-{
-	if (c >= '0' && c <= '9')
-		return (1);
-	else
-		return (0);
-}
-
-int	ft_atoi(const char *str)
-{
-	int	i;
-	int	symb;
-	int	nb;
-
-	nb = 0;
-	symb = 1;
-	i = 0;
-	while ((str[i] == ' ') || (str[i] >= 9 && str[i] <= 13))
-		i++;
-	if (str[i] == '-' || str[i] == '+')
-	{
-		if (str[i] == '-')
-			symb *= -1;
-		i++;
-	}
-	while (str[i] >= '0' && str[i] <= '9')
-	{
-		nb = (nb * 10 + str[i]) - '0';
-		i++;
-	}
-	return (nb * symb);
-}
-
-long	ft_atol(const char *str)
-{
-	int		i;
-	int		sign;
-	long	nb;
-
-	i = 0;
-	sign = 1;
-	nb = 0;
-	while (str[i] == ' ' || (str[i] >= 9 && str[i] <= 13))
-		i++;
-	if (str[i] == '-' || str[i] == '+')
-	{
-		if (str[i] == '-')
-			sign = -1;
-		i++;
-	}
-	while (str[i] >= '0' && str[i] <= '9')
-	{
-		nb = nb * 10 + str[i] - '0';
-		i++;
-	}
-	return (nb * sign);
 }
 
 void	init_arg(int argc, char **argv, t_struct *st)
@@ -222,65 +144,6 @@ void	free_all(t_struct *st)
 		i++;
 	}
 	free(st->philo);
-}
-
-int	check_numeric(char *av)
-{
-	int	i;
-
-	i = 0;
-	while (av[i])
-	{
-		if (!ft_isdigit(av[i]))
-			return (0);
-		i++;
-	}
-	return (1);
-}
-
-int	check_positive(char *av)
-{
-	if (ft_atoi(av) <= 0)
-		return (0);
-	return (1);
-}
-
-int	check_ullong(char *av)
-{
-	if (ft_strlen(av) > 10)
-		return (0);
-	return (1);
-}
-
-int	check_int_max(char *av)
-{
-	if (ft_atol(av) > INT_MAX)
-		return (0);
-	return (1);
-}
-
-int	parse_args(int ac, char **av)
-{
-	int	i;
-
-	i = 1;
-	if (ac < 5)
-		return (printf("Error : not enough arguments\n"), 0);
-	if (ac > 6)
-		return (printf("Error : too many arguments\n"), 0);
-	while (i < ac)
-	{
-		if (!check_numeric(av[i]))
-			return (printf("Error : argument %d is not numeric\n", i + 1), 0);
-		if (!check_int_max(av[i]))
-			return (printf("Error : argument %d is too big\n", i + 1), 0);
-		if (!check_ullong(av[i]))
-			return (printf("Error : argument %d is too big\n", i + 1), 0);
-		if (!check_positive(av[i]))
-			return (printf("Error : argument %d is not positive\n", i + 1), 0);
-		i++;
-	}
-	return (1);
 }
 
 void	dying(t_philo *philo)
