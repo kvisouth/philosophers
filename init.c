@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/18 14:02:54 by kevisout          #+#    #+#             */
-/*   Updated: 2025/08/18 14:03:17 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/18 14:20:24 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void	init_arg(int argc, char **argv, t_struct *st)
 	st->arg.meals_to_eat = -1;
 	if (argc == 6)
 		st->arg.meals_to_eat = ft_atoi(argv[5]);
-	st->arg.time_start = time_now();
+	st->arg.time_start = get_time_in_ms();
 	st->arg.flag = 0;
 	st->arg.satiated_philos = 0;
 }

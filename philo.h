@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/25 14:51:01 by kevso             #+#    #+#             */
-/*   Updated: 2025/08/18 14:03:14 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/18 14:20:24 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ typedef struct s_struct
 }							t_struct;
 
 /* (not)libft */
-long int	time_now(void);
+long int	get_time_in_ms(void);
 void		ft_usleep(long int time_in_ms);
 int			ft_strlen(char *str);
 int			ft_isdigit(int c);

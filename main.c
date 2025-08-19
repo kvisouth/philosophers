@@ -6,13 +6,13 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/17 13:06:24 by kevisout          #+#    #+#             */
-/*   Updated: 2025/08/18 14:03:25 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/19 14:12:06 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-long int	time_now(void)
+long int	get_time_in_ms(void)
 {
 	long int			time;
 	struct timeval		current_time;
@@ -38,7 +38,7 @@ int	check_death(t_philo *philo, int i)
 	return (0);
 }
 
-int	check_death_iter(t_philo *philo)
+int	check_stop_flag(t_philo *philo)
 {
 	int	i;
 
@@ -61,7 +61,7 @@ void	print_status(char *str, t_philo *philo)
 {
 	long int		time;
 
-	time = time_now() - philo->sarg->time_start;
+	time = get_time_in_ms() - philo->sarg->time_start;
 	if (!check_death(philo, 0))
 	{
 		pthread_mutex_lock(&philo->sarg->mtx_print_status);
@@ -70,7 +70,7 @@ void	print_status(char *str, t_philo *philo)
 	}
 }
 
-void	free_all(t_struct *st)
+void	free_structure(t_struct *st)
 {
 	int	i;
 
@@ -103,7 +103,7 @@ void	dying(t_philo *philo)
 	pthread_mutex_unlock(&philo->sarg->mtx_time_eat);
 	pthread_mutex_unlock(&philo->sarg->mtx_finish);
 	pthread_mutex_lock(&philo->sarg->mtx_print);
-	print_status("died 💀💀 👎😹👎 😂🤣\n", philo);
+	print_status("died\n", philo);
 	pthread_mutex_unlock(&philo->sarg->mtx_print);
 	check_death(philo, 1);
 	pthread_mutex_lock(&philo->sarg->mtx_time_eat);
@@ -113,7 +113,7 @@ void	dying(t_philo *philo)
 void	thinking(t_philo *philo)
 {
 	pthread_mutex_lock(&philo->sarg->mtx_print);
-	if (!check_death_iter(philo))
+	if (!check_stop_flag(philo))
 		print_status("is thinking\n", philo);
 	pthread_mutex_unlock(&philo->sarg->mtx_print);
 }
@@ -121,7 +121,7 @@ void	thinking(t_philo *philo)
 void	sleeping(t_philo *philo)
 {
 	pthread_mutex_lock(&philo->sarg->mtx_print);
-	if (!check_death_iter(philo))
+	if (!check_stop_flag(philo))
 		print_status("is sleeping\n", philo);
 	pthread_mutex_unlock(&philo->sarg->mtx_print);
 	ft_usleep(philo->sarg->time2sleep);
@@ -131,7 +131,7 @@ void	eating(t_philo *philo)
 {
 	pthread_mutex_lock(&philo->left_fork);
 	pthread_mutex_lock(&philo->sarg->mtx_print);
-	if (!check_death_iter(philo))
+	if (!check_stop_flag(philo))
 		print_status("has taken a fork\n", philo);
 	pthread_mutex_unlock(&philo->sarg->mtx_print);
 	if (!philo->right_fork)
@@ -148,7 +148,7 @@ void	eating(t_philo *philo)
 	pthread_mutex_lock(&philo->sarg->mtx_print);
 	print_status("is eating\n", philo);
 	pthread_mutex_lock(&philo->sarg->mtx_time_eat);
-	philo->last_eat = time_now();
+	philo->last_eat = get_time_in_ms();
 	pthread_mutex_unlock(&philo->sarg->mtx_time_eat);
 	pthread_mutex_unlock(&philo->sarg->mtx_print);
 	ft_usleep(philo->sarg->time2eat);
@@ -156,20 +156,20 @@ void	eating(t_philo *philo)
 	pthread_mutex_unlock(&philo->left_fork);
 }
 
-void	routine(t_philo *philo)
+void	philosopher_cycle(t_philo *philo)
 {
 	eating(philo);
 	sleeping(philo);
 	thinking(philo);
 }
 
-void	monitor_flagger(t_struct *st, t_philo *philo)
+void	check_philo_starvation(t_struct *st, t_philo *philo)
 {
 	pthread_mutex_unlock(&philo->sarg->mtx_flag);
 	pthread_mutex_lock(&st->arg.mtx_time_eat);
 	pthread_mutex_lock(&st->arg.mtx_finish);
 	if (!check_death(philo, 0) && !philo->finish
-		&& (time_now() - philo->last_eat)
+		&& (get_time_in_ms() - philo->last_eat)
 		>= (long)(st->arg.time2die))
 	{
 		dying(philo);
@@ -194,7 +194,7 @@ void	*monitoring(void *data)
 			ft_usleep(10);
 			pthread_mutex_lock(&philo->sarg->mtx_flag);
 			if (philo->sarg->flag == 0)
-				monitor_flagger(st, philo);
+				check_philo_starvation (st, philo);
 			else
 			{
 				pthread_mutex_unlock(&philo->sarg->mtx_flag);
@@ -206,7 +206,7 @@ void	*monitoring(void *data)
 	return (0);
 }
 
-void	*phithread(void *data)
+void	*philosopher_routine(void *data)
 {
 	t_philo	*philo;
 
@@ -215,7 +215,7 @@ void	*phithread(void *data)
 		ft_usleep(philo->sarg->time2eat / 10);
 	while (!check_death(philo, 0))
 	{
-		routine(philo);
+		philosopher_cycle(philo);
 		if (++philo->meals_eaten == philo->sarg->meals_to_eat)
 		{
 			pthread_mutex_lock(&philo->sarg->mtx_finish);
@@ -234,7 +234,7 @@ void	*phithread(void *data)
 	return (0);
 }
 
-int	threading(t_struct *st)
+int	start_simulation_threads(t_struct *st)
 {
 	int			i;
 	pthread_t	monithread;
@@ -244,7 +244,7 @@ int	threading(t_struct *st)
 	{
 		st->philo[i].sarg = &st->arg;
 		if (pthread_create(&st->philo[i].thread_id, NULL,
-				phithread, &st->philo[i]) != 0)
+				philosopher_routine, &st->philo[i]) != 0)
 			return (0);
 		i++;
 	}
@@ -265,7 +265,7 @@ int	main(int ac, char **av)
 		return (0);
 	init_mutex(&st);
 	init_philo(&st);
-	if (!threading(&st))
+	if (!start_simulation_threads(&st))
 		return (free(st.philo), 0);
-	return (free_all(&st), 0);
+	return (free_structure(&st), 0);
 }
