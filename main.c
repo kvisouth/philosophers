@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/17 13:06:24 by kevisout          #+#    #+#             */
-/*   Updated: 2025/08/19 14:35:46 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/19 14:41:36 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,13 @@ void	free_structure(t_struct *st)
 		i++;
 	}
 	free(st->philo);
+}
+
+void	philosopher_cycle(t_philo *philo)
+{
+	eating(philo);
+	sleeping(philo);
+	thinking(philo);
 }
 
 int	main(int ac, char **av)
