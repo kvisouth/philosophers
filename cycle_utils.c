@@ -6,7 +6,7 @@
 /*   By: kevisout <kevisout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/19 14:22:06 by kevisout          #+#    #+#             */
-/*   Updated: 2025/08/19 14:22:59 by kevisout         ###   ########.fr       */
+/*   Updated: 2025/08/19 14:35:14 by kevisout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,4 +81,11 @@ void	print_status(char *str, t_philo *philo)
 		printf("%ld %d %s", time, philo->id, str);
 		pthread_mutex_unlock(&philo->sarg->mtx_print_status);
 	}
+}
+
+void	philosopher_cycle(t_philo *philo)
+{
+	eating(philo);
+	sleeping(philo);
+	thinking(philo);
 }
