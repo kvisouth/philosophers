@@ -1,4 +1,4 @@
-SRC		=	$(wildcard *.c)
+SRC		= cycle.c  init.c  main.c monitor.c not_libft.c parsing.c threads.c
 
 NAME	= philo
 CC		= cc
